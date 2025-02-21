@@ -1,0 +1,4 @@
+---
+# include the type file for FreeBSD 14 type machines
+
+- include_tasks: type-files/freebsd-14-type.yml

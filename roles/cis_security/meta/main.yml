@@ -59,6 +59,9 @@ galaxy_info:
       versions:
         - 2019
         - 10
+    - name: FreeBSD
+      versions:
+        - 14
 
   galaxy_tags: []
     # List tags for your role here, one per line. A tag is a keyword that describes

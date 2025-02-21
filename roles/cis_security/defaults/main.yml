@@ -210,3 +210,19 @@ au_update_day: "0"                # Windows. Configure which day automatic updat
 au_update_time: "3"               # Windows. Configure what time automatic updates will be installed.
                                   #  Only takes effect if "automatic_updates" == "4". This is the hour portion of the
                                   #   time only. "3" means 03:00am. Set this value to '24' for windows to automatically pick a time
+
+cis_freebsd_filesystems:
+  - mountpoint: "/tmp"
+    control_num: "1.1.2.1"
+  - mountpoint: "/home"
+    control_num: "1.1.2.2"
+    check_noexec: false
+  - mountpoint: "/var"
+    control_num: "1.1.2.3"
+    check_nosuid: false
+  - mountpoint: "/var/tmp"
+    control_num: "1.1.2.4"
+  - mountpoint: "/var/log"
+    control_num: "1.1.2.5"
+  - mountpoint: "/var/audit"
+    control_num: "1.1.2.6"

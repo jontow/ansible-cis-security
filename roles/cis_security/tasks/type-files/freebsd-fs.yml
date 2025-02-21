@@ -1,0 +1,42 @@
+- name: "{{ item.control_num }} Configure {{ item.mountpoint }}"
+  block:
+#--------------------
+    - name: "{{ item.control_num }}.1 - Ensure {{ item.mountpoint }} is a separate partition"
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}'
+      register: item_mount_out
+      failed_when: (item_mount_out | int) >= 2
+      changed_when: false
+
+    - name: "{{ item.control_num }}.1 - Report - Ensure {{ item.mountpoint }} is a separate partition"
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: {{ item.mountpoint }} is not a separate partition"
+      when: item_mount_out is defined and (item_mount_out.stdout | int) == 0
+      changed_when: true
+
+#--------------------
+    - name: "{{ item.control_num }}.2 - Ensure {{ item.mountpoint }} is mounted with nosuid option"
+      when: item.check_nosuid | default(true)
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}.*nosuid'
+      register: item_nosuid_out
+      failed_when: (item_nosuid_out | int) >= 2
+      changed_when: false
+
+    - name: "{{ item.control_num }}.2 - Report - Ensure {{ item.mountpoint }} is mounted with nosuid option"
+      when: (item.check_nosuid | default(true)) and item_nosuid_out is defined and (item_nosuid_out.stdout | int) == 0
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: {{ item.mountpoint }} is not mounted with nosuid option"
+      changed_when: true
+
+#--------------------
+    - name: "{{ item.control_num }}.2 - Ensure {{ item.mountpoint }} is mounted with noexec option"
+      when: item.check_noexec | default(true)
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}.*noexec'
+      register: item_noexec_out
+      failed_when: (item_noexec_out | int) >= 2
+      changed_when: false
+
+    - name: "{{ item.control_num }}.3 - Report - Ensure {{ item.mountpoint }} is mounted with noexec option"
+      when: (item.check_noexec | default(true)) and item_noexec_out is defined and (item_noexec_out.stdout | int) == 0
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: {{ item.mountpoint }} is not mounted with noexec option"
+      changed_when: true

@@ -1,6 +1,6 @@
 # cis_security
 
-A collection to implement Center for Internet Security (CIS) controls for RHEL (7-9) and RHEL clones (Oracle, CentOS), SLES 15, and Ubuntu (18,22).04 LTS and certain Windows servers.
+A collection to implement Center for Internet Security (CIS) controls for RHEL (7-9) and RHEL clones (Oracle, CentOS), SLES 15, Ubuntu (18,22).04 LTS, certain Windows servers, and FreeBSD 14.
 
 ## Introduction
 
@@ -22,15 +22,16 @@ Benchmark Versions:
 | RHEL 7 | v2.2.0 |
 | RHEL 8 | v2.0.0 |
 | RHEL 9 | v1.0.0
-| CentOS 7 | v2.2.0 |
-| CentOS 8 | v1.0.0 |
-| Fedora 31 | \(Fedora 28\) v1.1.0 |
-| Oracle Linux 7 | v2.2.0 |
-| Oracle Linux 8 | v1.0.0 |
+| CentOS 7                     | v2.2.0                              |
+| CentOS 8                     | v1.0.0                              |
+| Fedora 31                    | \(Fedora 28\) v1.1.0                |
+| Oracle Linux 7               | v2.2.0                              |
+| Oracle Linux 8               | v1.0.0                              |
 | SUSE Linux Enterprise 15 SP1 | \(SUSE Linux Enterprise 12\) v2.1.0 |
-| Ubuntu 18.04 LTS | v2.0.1 |
-| Ubuntu 22.04 LTS | 1.0.0 |
-| Windows Server 2019 | v1.8.1 |
+| Ubuntu 18.04 LTS             | v2.0.1                              |
+| Ubuntu 22.04 LTS             | 1.0.0                               |
+| Windows Server 2019          | v1.8.1                              |
+| FreeBSD 14                   | v1.0.1                              |
 
 - Some distributions use older CIS benchmarks that were the most recent at the time of creation. Efforts have
 been made to update the controls to work with the newer operating systems. Older versions of the benchmarks are listed in parenthesis.
@@ -177,3 +178,4 @@ ways files can be manipuldated with modules.
 - 7/24/2022 - dsglaser@gmail.com - Coversion to full collection status (Namespace: dsglaser)
 - 4/14/2023 - dsglaser@gmail.com - Added support for RHEL 9, updated RHEL 8 to CIS v2.0.0o
 - 5/2/2023  - dsglaser@gmail.com - Added support for Ubuntu 22.04 LTS
+- 2/20/2025 - jontow@mototowne.com - Added support for FreeBSD 14
