@@ -2,7 +2,7 @@
   block:
 #--------------------
     - name: "{{ item.control_num }}.1 - Ensure {{ item.mountpoint }} is a separate partition"
-      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}'
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}\s'
       register: item_mount_out
       failed_when: (item_mount_out | int) >= 2
       changed_when: false
@@ -16,7 +16,7 @@
 #--------------------
     - name: "{{ item.control_num }}.2 - Ensure {{ item.mountpoint }} is mounted with nosuid option"
       when: item.check_nosuid | default(true)
-      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}.*nosuid'
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}\s.*nosuid'
       register: item_nosuid_out
       failed_when: (item_nosuid_out | int) >= 2
       changed_when: false
@@ -30,7 +30,7 @@
 #--------------------
     - name: "{{ item.control_num }}.2 - Ensure {{ item.mountpoint }} is mounted with noexec option"
       when: item.check_noexec | default(true)
-      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}.*noexec'
+      ansible.builtin.shell: mount -p | grep -c -E '\s\{{ item.mountpoint }}\s.*noexec'
       register: item_noexec_out
       failed_when: (item_noexec_out | int) >= 2
       changed_when: false

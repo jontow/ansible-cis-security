@@ -211,7 +211,7 @@ au_update_time: "3"               # Windows. Configure what time automatic updat
                                   #  Only takes effect if "automatic_updates" == "4". This is the hour portion of the
                                   #   time only. "3" means 03:00am. Set this value to '24' for windows to automatically pick a time
 
-cis_freebsd_filesystems:
+cis_freebsd_filesystems:          # Filesystems
   - mountpoint: "/tmp"
     control_num: "1.1.2.1"
   - mountpoint: "/home"
@@ -226,3 +226,5 @@ cis_freebsd_filesystems:
     control_num: "1.1.2.5"
   - mountpoint: "/var/audit"
     control_num: "1.1.2.6"
+
+cis_package_repo_count: 1         # Expected number of configured package repositories

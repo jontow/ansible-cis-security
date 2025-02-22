@@ -81,3 +81,112 @@
     - 1.1.2
   include_tasks: freebsd-fs.yml
   loop: "{{ cis_freebsd_filesystems | default([]) }}"
+
+- name: 1.2.1 - Ensure update server certificate key fingerprints are configured
+  block:
+    - name: 1.2.1 set_fact tmp_key
+      ansible.builtin.set_fact:
+        tmp_key: "ansible-{{ inventory_hostname }}-{{ ansible_date_time.epoch }}"
+
+    - name: 1.2.1 fetch public key
+      ansible.builtin.get_url:
+        url: "http://update.freebsd.org/{{ ansible_distribution_release }}/{{ ansible_architecture }}/pub.ssl"
+        dest: "/tmp/{{ tmp_key }}-pub.ssl"
+        mode: 0400
+      changed_when: false
+
+    - name: 1.2.1 fetch metadata
+      ansible.builtin.get_url:
+        url: "http://update.freebsd.org/{{ ansible_distribution_release }}/{{ ansible_architecture }}/latest.ssl"
+        dest: "/tmp/{{ tmp_key }}-latest.ssl"
+        mode: 0400
+      changed_when: false
+
+    - name: 1.2.1 verify
+      ansible.builtin.shell: openssl rsautl -pubin -inkey /tmp/{{ tmp_key }}-pub.ssl -verify < /tmp/{{ tmp_key }}-latest.ssl
+      register: openssl_verify_pkgkey
+      changed_when: false
+
+    - name: 1.2.1 sha256 public key
+      ansible.builtin.shell: sha256 -q /tmp/{{ tmp_key }}-pub.ssl
+      register: sha256_pkgkey_pub
+      changed_when: false
+
+    - name: 1.2.1 get freebsd-update KeyPrint
+      ansible.builtin.shell: grep KeyPrint /etc/freebsd-update.conf | cut -f 2 -w
+      register: sha256_pkgkey_conf
+      changed_when: false
+
+    - name: 1.2.1 verify update server key fingerprint
+      when: sha256_pkgkey_pub.stdout != sha256_pkgkey_conf.stdout
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: /etc/freebsd-update.conf KeyPrint does not match upstream"
+      changed_when: true
+
+    - name: 1.2.1 cleanup tmpfiles
+      ansible.builtin.file:
+        name: "{{ item }}"
+        state: absent
+      changed_when: false
+      loop:
+        - /tmp/{{ tmp_key }}-pub.ssl
+        - /tmp/{{ tmp_key }}-latest.ssl
+
+- name: 1.2.2 - Ensure package manager repositories are configured
+  block:
+    - name: 1.2.2 get pkg repo list
+      ansible.builtin.shell: pkg -vv | sed '1, /^Repositories/d' | grep -c -E '\s\{'
+      register: pkg_repo_list
+      changed_when: false
+
+    - name: 1.2.2 package repo list length
+      when: (pkg_repo_list.stdout | int) > cis_package_repo_count
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: package repo list length longer than expected (is {{ pkg_repo_list.stdout | int }}, should be {{ cis_package_repo_count }})"
+      changed_when: true
+
+- name: 1.2.3 - Ensure updates, patches, and additional security software are installed
+  block:
+    - name: 1.2.3 - freebsd-update fetch updatesready
+      ansible.builtin.shell: freebsd-update fetch updatesready
+      register: freebsd_updatesready
+      failed_when: freebsd_updatesready.rc > 2
+      changed_when: false
+
+    - name: 1.2.3 - system updates ready control
+      when: freebsd_updatesready.rc != 2
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: freebsd-update has available updates to apply"
+      changed_when: true
+
+    - name: 1.2.3 - pkg upgrade check
+      ansible.builtin.shell: pkg update -q && pkg upgrade -n | grep -c 'Your packages are up to date'
+      register: pkg_upgrade_check
+      failed_when: false
+      changed_when: false
+
+    - name: 1.2.3 - pkg upgrades available
+      when: (pkg_upgrade_check.stdout | int) != 1
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: pkg has available updates to apply"
+      changed_when: true
+
+- name: 1.3.1 - Ensure bootloader password is set
+  block:
+    - name: 1.3.1 - Check for enabled disk encryption
+      ansible.builtin.shell: geli status | grep -c ACTIVE
+      register: geli_active_devcount
+      failed_when: false
+      changed_when: false
+
+    - name: 1.3.1 - Check for bootloader password
+      ansible.builtin.shell: grep -c -E '^password' /boot/loader.conf
+      register: bootloader_password
+      failed_when: false
+      changed_when: false
+
+    - name: 1.3.1 - Report bootloader password control
+      when: (geli_active_devcount.stdout | int) == 0 and (bootloader_password.stdout | int) == 0
+      ansible.builtin.debug:
+        msg: "FAILED CONTROL: bootloader has no password set, disk encryption not enabled"
+      changed_when: true
