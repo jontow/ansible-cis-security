@@ -1,4 +1,4 @@
-- name: "{{ item.control_num }} Configure {{ item.mountpoint }}"
+- name: "{{ item.control_num }} - Configure {{ item.mountpoint }}"
   block:
 #--------------------
     - name: "{{ item.control_num }}.1 - Ensure {{ item.mountpoint }} is a separate partition"

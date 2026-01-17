@@ -1,0 +1,4 @@
+---
+# include the type file for Ubuntu 24 type machines
+
+- include_tasks: type-files/ubuntu-24-type.yml

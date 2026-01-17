@@ -1,0 +1,172 @@
+FreeBSD 14 hardening notes, from CIS benchmark:
+
+1.1: Filesystem/partitioning: (!!! INSTALL TIME !!!)
+  1.1.1: Filesystem Kernel Modules
+    1.1.1.1: EXCEPTION: Disable ext2fs kernel modules (workstation use, may use these filesystems)
+    1.1.1.2: EXCEPTION: Disable msdosfs kernel modules (workstation use, may use these filesystems)
+    1.1.1.3: EXCEPTION: Disable zfs kernel modules (workstation use, may use these filesystems)
+  1.1.2.1: /tmp on tmpfs: nosuid,noexec
+  1.1.2.2: /home separate: nosuid
+  1.1.2.3: /var separate: nosuid
+  1.1.2.4: /var/tmp separate: nosuid,noexec
+  1.1.2.5: /var/log separate: nosuid,noexec
+  1.1.2.6: /var/audit separate: nosuid,noexec
+1.2: Software/Patch management:
+  1.2.1: script to verify update server key fingerprint
+  1.2.2: configure pkg manager repos
+  1.2.3: ensure latest updates installed (freebsd-update, pkg)
+1.3: secure boot settings
+  1.3.1: set bootloader password
+  1.3.2: loader.conf permissions to 0600
+1.4: additional process hardening
+  1.4.1: ASLR enabled (sysctl)
+  1.4.2: disable coredumps
+  1.4.3: disable coredump storage
+1.5: Mandatory Access Control (generic recommendation, very system-specific)
+1.6: CLI warning banners
+  1.6.1: /etc/motd
+  1.6.2: /etc/issue
+  1.6.3: /etc/issue.net (unused on FreeBSD, symlink to /etc/issue)
+  1.6.4: /etc/motd permissions (root/wheel 0644)
+  1.6.5: /etc/issue permissions (root/wheel 0644)
+2.1: NTP
+2.2: disable any unused/unnecessary services
+  2.2.1: disable autofs/automount
+  2.2.2: disable ftpd(inetd entirely)
+  2.2.3: ensure dovecot/cyrus-imapd not installed/not in use
+  2.2.4: disable NFS server
+  2.2.5: disable NIS server
+  2.2.6: disable rpcbind
+  2.2.7: disable snmpd
+  2.2.8: disable telnetd(inetd entirely)
+  2.2.9: disable tftpd(inetd entirely)
+  2.2.10: ensure squid/proxy services not installed/not in use
+  2.2.11: ensure MTA configured for local-only mode
+  2.2.12: ensure only approved services are listening on a network interface
+3.1: enable IPv6 if relevant, disable if not
+3.2: disable sctp kernel module
+3.3: network kernel params
+  3.3.1: disable ip forwarding (sysctl)
+  3.3.2: disable sending ip redirects (sysctl)
+  3.3.3: disable broadcast/multicast icmp (sysctl)
+  3.3.4: disable icmp redirects (sysctl)
+  3.3.5: disable source routed packets (sysctl)
+  3.3.6: enable tcp syn cookies (sysctl)
+  3.3.7: disable ipv6 router advertisements (sysctl)
+3.4: host-based firewall
+  3.4.1: enable ipfw
+  3.4.2: ensure only one firewall utility is enabled
+4.1: job schedulers
+  4.1.1: cron
+    4.1.1.1: /etc/crontab permissions (root/wheel, 0600)
+    4.1.1.2: /etc/cron.d permissions (root/wheel, 0700)
+    4.1.1.3: cron allow/denylist (/var/cron/{allow,deny})
+  4.1.2: at
+    4.1.2.1: at allow/denylist (/var/at/at.{allow,deny})
+4.2: sshd
+  4.2.1: /etc/ssh/sshd_config permissions (root/wheel 0600)
+  4.2.2: /etc/ssh/ssh_host_*_key (private key) permissions (root/wheel 0600)
+  4.2.3: /etc/ssh/ssh_host_*_key.pub (public key) permissions (root/wheel 0644)
+  4.2.4: sshd access ({Allow,Deny}{Users,Groups}
+  4.2.5: sshd banner (/etc/issue.net)
+  4.2.6: sshd ciphers: aes{256,192,128}-ctr, verify no weak cbc ciphers enabled
+  4.2.7: sshd ClientAlive{Interval,CountMax}
+  4.2.8: sshd DisableForwarding (may need a documented exception here, disable as much forwarding as possible)
+  4.2.9: sshd HostbasedAuthentication disabled
+  4.2.10: sshd IgnoreRhosts enabled
+  4.2.11: sshd KexAlgorithms disable any weak kexalgo (*-sha1)
+  4.2.12: sshd LoginGraceTime < 60
+  4.2.13: sshd LogLevel VERBOSE
+  4.2.14: sshd MAC disable weak algo (MD5, < 96bit)
+  4.2.15: sshd MaxAuthTries 4
+  4.2.16: sshd MaxSessions 10
+  4.2.17: sshd MaxStartups 10:30:60 (or more restrictive)
+  4.2.18: sshd PermitEmptyPasswords disabled
+  4.2.19: sshd PermitRootLogin disabled
+  4.2.20: sshd PermitUserEnvironment disabled
+  4.2.21: sshd UsePam enabled
+4.3: privilege escalation
+  4.3.1: install sudo (or doas)
+  4.3.2: ensure sudo commands use pty (Defaults use_pty)
+  4.3.3: ensure sudo log file exists (syslog or 'Defaults logfile=...', don't forget logrotate)
+  4.3.4: ensure users must supply password (disable NOPASSWD)
+  4.3.5: ensure users must reauth (remove "!authenticate" tags)
+  4.3.6: sudo timeout < 15mins
+  4.3.7: restrict access to su (/etc/pam.d/su change group=<new empty su group>)
+4.4: PAM
+  4.4.1: configure args
+    4.4.1.1: configure pam_passwdqc
+      4.4.1.1.1: ensure password length is configured (minlen=disabled,14,12,8,6)
+      4.4.1.1.2: ensure password quality enforced for root user (enforce=everyone)
+    4.4.1.2: configure pam_unix
+      4.4.1.2.1: remove nullokarg
+4.5: User Accounts and Environment
+  4.5.1: configure shadow password params
+    4.5.1.1: ensure strong password hashing algo in use (sha512)
+    4.5.1.2: password expiration (documented exception: https://cybersecuritynews.com/nist-rules-password-security/)
+    4.5.1.3: password expiration warning (documented exception: https://cybersecuritynews.com/nist-rules-password-security/)
+  4.5.2: root/system accounts
+    4.5.2.1: ensure default group for root = 0
+    4.5.2.2: ensure root umask is configured (/root/.profile 0027 or more restrictive)
+    4.5.2.3: ensure system accounts secured (nologin shells)
+  4.5.3: user default environment
+    4.5.3.1: nologin not listed in /etc/shells
+    4.5.3.2: ensure user default umask (/etc/login.conf umask=022)
+5.1: logging
+  5.1.1: configure syslog
+    5.1.1.1: ensure syslogd installed (base)
+    5.1.1.2: ensure syslogd enabled
+    5.1.1.3: newsyslog.conf default logfile permissions (600, 644 or more restrictive)
+    5.1.1.4: review logging settings to ensure appropriate config
+    5.1.1.5: ensure logging to remote host (syslogd does not encrypt, tunnel or use something else!)
+    5.1.1.6: ensure syslogd configured not to receive remote logs
+    5.1.1.7: ensure newsyslog configured
+    5.1.1.8: on-disk logfile permissions review
+5.2: auditing
+  5.2.1: enable auditd
+  5.2.2: data retention
+    5.2.2.1: /etc/security/audit_control filesz:2M
+    5.2.2.2: /etc/security/audit_control expire-after:60d AND 1G
+  5.2.3: auditd rules
+    5.2.3.1: ensure actions as another user are always logged (audit_control flags:aa)
+    5.2.3.2: ensure events that modify sudo log file are logged (audit_control flags:fa,fc,fd,fm,fr,fw)
+    5.2.3.3: ensure privileged events logged (audit_control flags:pc)
+    5.2.3.4: ensure discretionary access control perm mod events logged (audit_control flags:fm)
+    5.2.3.5: ensure successful filesystem mounts logged (audit_control flags:ad)
+    5.2.3.6: ensure login/logout events logged (audit_control flags:lo)
+    5.2.3.7: ensure file deletion events logged (audit_control flags:fd)
+    5.2.3.8: ensure usermod events recorded (audit_control flags:ad)
+  5.2.4: auditd file access
+    5.2.4.1: audit log dir perms (0750 or more restrictive)
+    5.2.4.2: audit log file perms (0640 or more restrictive)
+    5.2.4.3: audit log file ownership (root)
+    5.2.4.4: audit log file group (wheel/audit)
+    5.2.4.5: audit config file perms (root/wheel 0640 or more restrictive)
+    5.2.4.6: audit config file ownership (root)
+    5.2.4.7: audit config file group (wheel)
+    5.2.4.8: audit tools perms (/usr/sbin/*audit* 555 or more restrictive)
+    5.2.4.9: audit tools ownership (root)
+    5.2.4.10: audit tools group (wheel)
+5.3: file integrity checking
+  5.3.1: install AIDE (pkg install aide), configure for environment
+  5.3.2: run aide daily from crontab
+6.1: file permissions
+  6.1.1: /etc/passwd perms (root/wheel 0644 or more restrictive)
+  6.1.2: /etc/group perms (root/wheel 0644 or more restrictive)
+  6.1.3: /etc/master.passwd perms (root/wheel 0000)
+  6.1.4: /etc/shells perms (root/wheel 0644)
+  6.1.5: audit world writable files, world writable directories without sticky bit
+  6.1.6: audit no unowned/ungrouped files exist
+  6.1.7: audit suid/sgid files
+6.2: local user/group settings
+  6.2.1: ensure /etc/master.passwd uses shadowed password
+  6.2.2: ensure /etc/master.passwd fields not empty
+  6.2.3: ensure all groups in /etc/passwd exist in /etc/group
+  6.2.4: ensure no duplicate UIDs exist
+  6.2.5: ensure no duplicate GIDs exist
+  6.2.6: ensure no duplicate usernames exist
+  6.2.7: ensure no duplicate groupnames exist
+  6.2.8: ensure root PATH integrity
+  6.2.9: ensure root is the only user with uid=0
+  6.2.10: ensure interactive user home directories configured (exist, ownership, perms)
+  6.2.11: ensure interactive user dotfiles configuration (.forward,.rhost,.netrc)

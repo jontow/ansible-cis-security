@@ -1,0 +1,48 @@
+---
+- name: "{{ item.control_num }} - Configure {{ item.mountpoint }}"
+  block:
+    - name: "{{ item.control_num }}.1 - Ensure {{ item.mountpoint }} is a separate partition"
+      block:
+        # Create a empty integer variable and set it as a fact on the managed machine.
+        - name: "{{ item.control_num }}.1 - Set/reset {{ item.mountpoint }} mount counter"
+          ansible.builtin.set_fact:
+            mount_count: 0
+
+        # Examine the ansible_mounts variable which includes all of the system mounts
+        #  on machine. Search for the appropriate mount information. If it exists,
+        #  increment the integer variable by '1' and save the filesystems options to a
+        #  new variable called mount_options.
+        - name: "{{ item.control_num }}.1 - Determine if {{ item.mountpoint }} is on a separate partition"
+          ansible.builtin.set_fact:
+            mount_count: "addition{{ mount_count + 1 }}"
+            mount_options: "{{ mount_item.options }}"
+          when: mount_item.mount == item.mountpoint
+          loop: "{{ ansible_mounts }}"
+          loop_control:
+            loop_var: "mount_item"
+
+        # If the number in mount_count variable is > 0, then we found the mount. If not,
+        #  then report to the user that the given filesystem was not on a separate partition.
+        - name: "{{ item.control_num }}.1 - Report to user if not on separate partition"
+          ansible.builtin.debug:
+            msg: "FAILED CONTROL: {{ item.mountpoint }} is not on a separate partition. Skipping mount option checks"
+          when: mount_count == 0
+          changed_when: true
+
+        - name: "{{ item.control_num }}.2 - Report to user if {{ item.mountpoint }} does not have nodev set"
+          ansible.builtin.debug:
+            msg: "FAILED CONTROL: {{ item.mountpoint }} does not have nodev set"
+          when: mount_options is defined and "nodev" not in mount_options and mount_count == 0
+          changed_when: true
+
+        - name: "{{ item.control_num }}.3 - Report to user if {{ item.mountpoint }} does not have nosuid set"
+          ansible.builtin.debug:
+            msg: "FAILED CONTROL: {{ item.mountpoint }} does not have nosuid set"
+          when: mount_options is defined and "nosuid" not in mount_options and mount_count == 0
+          changed_when: true
+
+        - name: "{{ item.control_num }}.4 - Report to user if {{ item.mountpoint }} does not have noexec set"
+          ansible.builtin.debug:
+            msg: "FAILED CONTROL: {{ item.mountpoint }} does not have noexec set"
+          when: mount_options is defined and "noexec" not in mount_options and mount_count == 0
+          changed_when: true
